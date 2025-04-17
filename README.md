@@ -1,4 +1,4 @@
-# Objection Handling App - Project Overview (Updated Version)
+# Objection Handling App - Project Overview
 
 ## 🧾 Summary
 A secure Node.js + MySQL web application that allows farmers to:
