@@ -1,40 +1,90 @@
-# Objection Handling App - Project Overview
+# Objection Handling App - Project Overview (Updated Version)
 
 ## 🧾 Summary
-This Node.js + MySQL application allows farmers to register, log in, and submit an objection based on a transaction number. Admins can log in to review, archive, and track status changes. The application is aligned structurally with a previously built aid registration app and supports future integration as a microservice.
+A secure Node.js + MySQL web application that allows farmers to:
+- Register and log in
+- Submit objections using a transaction number
+- Track objection status (with Arabic UI support)
+- Recover their password using verification codes
+
+Admins can:
+- Review, resolve, and archive objections
+- Monitor status with pagination and filtering
+- View detailed info per submission
 
 ---
 
 ## 🧱 Tech Stack
 - **Backend**: Node.js (Express)
-- **Database**: MySQL (XAMPP local for dev)
+- **Database**: MySQL
 - **Templating Engine**: Handlebars (`express-handlebars`)
-- **Session Store**: MySQL (using `express-mysql-session`)
-- **ORM**: Raw SQL using `mysql2/promise`
-- **Other Libs**: `bcrypt`, `connect-flash`, `helmet`, `method-override`
+- **Session Store**: In-memory (optionally extendable)
+- **ORM**: Raw SQL via `mysql2/promise`
+- **Middleware**: `helmet`, `express-validator`, `body-parser`, `flash`
+- **Security**: Content Security Policy, password hashing, session protection
 
 ---
 
-## 🧩 Features
+## 🌍 Localization
+- Arabic interface with status translations
+- Date formatting using `moment` in Arabic locale
 
-### 👨‍🌾 Farmer Features
-- Register and log in (session-based)
-- Submit an objection using a valid transaction number
-- View status of existing objection
-- Prevent duplicate objections until one is archived
-- Log out
+---
 
-### 🛠️ Admin Features
-- Log in with hardcoded (hashed) credentials via `.env`
-- View all objections with filter by status
-- Pagination (planned)
-- Mark objections as "reviewed"
-- Archive objections (moves to `archive` table and deletes original)
-- View status change history via modal popup (AJAX)
+## 📄 Database Tables (Auto-Created)
 
-### 🛡️ Security / Quality
-- Input sanitization and validation via `express-validator`
-- Flash messaging for user feedback
-- Session timeout with logout button
-- Session stored securely in MySQL
-- Headers protected using `helmet`
+### `farmer`
+Stores user info.
+- `id`, `first_name`, `last_name`, `phone`, `national_id`, `password_hash`, `created_at`
+
+### `objection`
+Active objections.
+- `id`, `farmer_id`, `code`, `transaction_number`, `details`, `status`, `created_at`, `reviewed_at`
+
+### `archive`
+Archived objections.
+- Mirrors `objection` structure, stores finalized entries
+
+### `password_reset`
+Temporary table for password recovery flow.
+- `farmer_id`, `national_id`, `reset_token`, `verification_code`, `expires_at`
+
+---
+
+## 👨‍🌾 Farmer Features
+- Register/login/logout
+- Submit only 1 active objection at a time
+- Track all previous objections
+- Password recovery with verification code split input (6 digits)
+
+---
+
+## 🛠️ Admin Features
+- Admin login with credentials in `.env`
+- Dashboard to view objections (paginated)
+- Mark as `reviewed`, `resolved`, or `archived`
+- Archived objections are copied to archive table and removed from active
+
+---
+
+## 🛡️ Security
+- `helmet` with strict Content Security Policy
+- `bcrypt` hashed passwords
+- Flash messages to protect error feedback
+- Middleware-based route protection
+- Secure password reset using 6-digit code + token
+
+---
+
+## 🚀 Future Enhancements
+- Admin filters by status and search
+- Email/SMS gateway for verification codes
+- Integrate into shared frontend microservice
+- Add Prometheus/Grafana monitoring hooks
+- Dockerize and deploy to K8s
+
+---
+
+## ✅ Status
+> ✅ App is stable and functional. Ready for integration or deployment. View logic follows a single-file structure with consistent behavior matching user's previous apps.
+
