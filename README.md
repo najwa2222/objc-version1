@@ -1,90 +1,60 @@
-# Objection Handling App - Project Overview
+# Objection Management System
 
-## 🧾 Summary
-A secure Node.js + MySQL web application that allows farmers to:
-- Register and log in
-- Submit objections using a transaction number
-- Track objection status (with Arabic UI support)
-- Recover their password using verification codes
-
-Admins can:
-- Review, resolve, and archive objections
-- Monitor status with pagination and filtering
-- View detailed info per submission
+A Node.js + MySQL web application that allows **farmers to submit objections** to a central authority and **administrators to manage and resolve them**. Built with Express, Handlebars, and secure user authentication, the app supports password recovery, status tracking, and multi-role dashboards.
 
 ---
 
-## 🧱 Tech Stack
-- **Backend**: Node.js (Express)
-- **Database**: MySQL
-- **Templating Engine**: Handlebars (`express-handlebars`)
-- **Session Store**: In-memory (optionally extendable)
-- **ORM**: Raw SQL via `mysql2/promise`
-- **Middleware**: `helmet`, `express-validator`, `body-parser`, `flash`
-- **Security**: Content Security Policy, password hashing, session protection
+## 🚀 Features
+
+- 🔐 Secure Farmer & Admin Login (bcrypt-hashed passwords, session-based)
+- ✍️ Farmers can:
+  - Register and log in
+  - Submit new objections (1 active at a time)
+  - Track objection status
+  - Reset forgotten passwords via verification code
+- 🧑‍💼 Admins can:
+  - View, review, and resolve pending objections
+  - Search objections by transaction number
+  - Access a resolved archive
+- 🌐 Arabic-language support with localized date formatting
+- 🛡️ Uses `helmet` for secure HTTP headers and CSP
+- 📦 Bootstrap-based frontend via Handlebars templates
 
 ---
 
-## 🌍 Localization
-- Arabic interface with status translations
-- Date formatting using `moment` in Arabic locale
+## ⚙️ Setup
 
----
+### 1. Clone & Install
 
-## 📄 Database Tables (Auto-Created)
+```bash
+git clone https://github.com/najwa2222/objc-version1.git
+cd objc-version1
+npm install
+```
 
-### `farmer`
-Stores user info.
-- `id`, `first_name`, `last_name`, `phone`, `national_id`, `password_hash`, `created_at`
+Run the App
+```bash
+npm start
+```
 
-### `objection`
-Active objections.
-- `id`, `farmer_id`, `code`, `transaction_number`, `details`, `status`, `created_at`, `reviewed_at`
+Open in browser: http://localhost:3000
 
-### `archive`
-Archived objections.
-- Mirrors `objection` structure, stores finalized entries
 
-### `password_reset`
-Temporary table for password recovery flow.
-- `farmer_id`, `national_id`, `reset_token`, `verification_code`, `expires_at`
+Development Notes
+The app auto-creates the required tables (farmer, objection, password_reset) on first run.
 
----
+Use the /debug/env route to verify environment config in development.
 
-## 👨‍🌾 Farmer Features
-- Register/login/logout
-- Submit only 1 active objection at a time
-- Track all previous objections
-- Password recovery with verification code split input (6 digits)
+🛠 Tech Stack
+Backend: Node.js, Express, MySQL
 
----
+Templating: Handlebars (.hbs)
 
-## 🛠️ Admin Features
-- Admin login with credentials in `.env`
-- Dashboard to view objections (paginated)
-- Mark as `reviewed`, `resolved`, or `archived`
-- Archived objections are copied to archive table and removed from active
+Security: bcrypt, express-session, helmet, connect-flash
 
----
+Validation: express-validator
 
-## 🛡️ Security
-- `helmet` with strict Content Security Policy
-- `bcrypt` hashed passwords
-- Flash messages to protect error feedback
-- Middleware-based route protection
-- Secure password reset using 6-digit code + token
+Date Formatting: moment (Arabic + English formats)
 
----
-
-## 🚀 Future Enhancements
-- Admin filters by status and search
-- Email/SMS gateway for verification codes
-- Integrate into shared frontend microservice
-- Add Prometheus/Grafana monitoring hooks
-- Dockerize and deploy to K8s
-
----
-
-## ✅ Status
-> ✅ App is stable and functional. Ready for integration or deployment. View logic follows a single-file structure with consistent behavior matching user's previous apps.
+Frontend: Bootstrap 5 (via CDN)
 
