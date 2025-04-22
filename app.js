@@ -141,48 +141,64 @@ const checkSubmissionEligibility = async (farmerId) => {
 async function initDatabase() {
   try {
     const connection = await pool.getConnection();
-    
-    // Create farmer table if not exists
+
+    // Create farmer table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS farmer (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INT(11) NOT NULL AUTO_INCREMENT,
         first_name VARCHAR(100) NOT NULL,
         last_name VARCHAR(100) NOT NULL,
         phone VARCHAR(20) NOT NULL,
-        national_id VARCHAR(20) UNIQUE NOT NULL,
+        national_id VARCHAR(50) NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     `);
-    
-    // Create objection table if not exists
+
+    // Create objection table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS objection (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        farmer_id INT NOT NULL,
-        code VARCHAR(50) UNIQUE NOT NULL,
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        farmer_id INT(11) NOT NULL,
+        code VARCHAR(50) NOT NULL,
         transaction_number VARCHAR(100) NOT NULL,
-        status ENUM('pending', 'reviewed', 'resolved') DEFAULT 'pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        reviewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (farmer_id) REFERENCES farmer(id)
-      )
+        status ENUM('pending','reviewed','resolved') DEFAULT 'pending',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY (code),
+        KEY farmer_id (farmer_id),
+        CONSTRAINT objection_ibfk_1 FOREIGN KEY (farmer_id) REFERENCES farmer(id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     `);
-        
-    // Create password reset table if not exists
+
+    // Create password_reset table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS password_reset (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        farmer_id INT NOT NULL,
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        farmer_id INT(11) NOT NULL,
         national_id VARCHAR(20) NOT NULL,
         reset_token VARCHAR(100) NOT NULL,
         verification_code VARCHAR(6) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        expires_at TIMESTAMP NULL,
-        FOREIGN KEY (farmer_id) REFERENCES farmer(id)
-      )
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        expires_at TIMESTAMP NULL DEFAULT NULL,
+        PRIMARY KEY (id),
+        KEY farmer_id (farmer_id),
+        CONSTRAINT password_reset_ibfk_1 FOREIGN KEY (farmer_id) REFERENCES farmer(id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     `);
-    
+
+    // Create sessions table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        session_id VARCHAR(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+        expires INT(11) UNSIGNED NOT NULL,
+        data MEDIUMTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+        PRIMARY KEY (session_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    `);
+
     connection.release();
     console.log('Database initialized successfully');
   } catch (error) {
@@ -190,6 +206,7 @@ async function initDatabase() {
     process.exit(1);
   }
 }
+
 
 // --------------------------
 // All Original Routes Maintained
@@ -201,7 +218,7 @@ app.get('/', (req, res) => res.render('home'));
 // Farmer Registration
 app.get('/farmer/register', (req, res) => res.render('farmer_register'));
 app.post('/farmer/register', [
-  body('national_id').isLength({ min: 5 }).withMessage('رقم الهوية غير صالح'),
+  body('national_id').isLength({ min: 8 }).withMessage('رقم الهوية غير صالح'),
   body('password').isLength({ min: 6 }).withMessage('كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
   body('confirm_password').custom((value, { req }) => {
     if (value !== req.body.password) {
@@ -212,7 +229,7 @@ app.post('/farmer/register', [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.render('farmer_register', { errors: errors.array() });
+    return res.render('farmer_register', { errors: errors.array(), oldInput: req.body });
   }
 
   try {
@@ -223,7 +240,7 @@ app.post('/farmer/register', [
     );
     console.log(existingFarmers.length);
     if (existingFarmers.length > 0) {
-      req.flash('error', 'رقم الهوية الوطنية مسجل مسبقاً. إذا كنت تملك حساباً بالفعل، يمكنك <a href="/farmer/login">تسجيل الدخول</a>');
+      req.flash('error', 'رقم الهوية الوطنية مسجل مسبقاً. إذا كنت تملك حساباً بالفعل، يمكنك تسجيل الدخول');
       return res.redirect('/farmer/login');
     }
     
@@ -254,7 +271,7 @@ app.post('/farmer/login', async (req, res) => {
     );
     
     if (farmers.length == 0 || !await bcrypt.compare(req.body.password, farmers[0].password_hash)) {
-      req.flash('error', 'بيانات الدخول غير صحيحة. الرجاء التحقق من رقم الهوية وكلمة المرور. إذا نسيت كلمة المرور، يمكنك <a href="/farmer/forgot-password">استعادتها</a>');
+      req.flash('error', 'بيانات الدخول غير صحيحة. الرجاء التحقق من رقم الهوية وكلمة المرور. إذا نسيت كلمة المرور، يمكنك استعادتها');
       return res.redirect('/farmer/login');
     }
 

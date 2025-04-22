@@ -6,26 +6,34 @@
             </div>
             
             <div class="card-body">
+                {{#each errors}}
+                <p style="color: red">{{this.msg}}</p>
+                {{/each}}
+                
                 <form action="/farmer/register" method="POST">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">الاسم الأول</label>
-                            <input type="text" name="first_name" class="form-control" required>
+                            <input type="text" name="first_name" class="form-control" required
+                                   value="{{oldInput.first_name}}">
                         </div>
                         
                         <div class="col-md-6">
                             <label class="form-label">اسم العائلة</label>
-                            <input type="text" name="last_name" class="form-control" required>
+                            <input type="text" name="last_name" class="form-control" required
+                                   value="{{oldInput.last_name}}">
                         </div>
                         
                         <div class="col-md-6">
                             <label class="form-label">رقم الجوال</label>
-                            <input type="tel" name="phone" class="form-control" required>
+                            <input type="tel" name="phone" class="form-control" required
+                                   value="{{oldInput.phone}}">
                         </div>
                         
                         <div class="col-md-6">
                             <label class="form-label">رقم الهوية الوطنية</label>
-                            <input type="text" name="national_id" class="form-control" required>
+                            <input type="number" name="national_id" class="form-control" required
+                                   value="{{oldInput.national_id}}">
                         </div>
                         
                         <div class="col-md-6">
